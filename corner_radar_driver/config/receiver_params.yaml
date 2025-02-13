@@ -12,6 +12,6 @@ corner_radar_driver_receiver:
     timeout: 0.2
 
     # TF frame id for all published messages of the receiver
-    node_frame_id: base_link
+    node_frame_id: fr_radar_link
     # CAN frame id of first location message
-    location_base_id: 0x408 # FR Radar location
+    location_base_id: 0x408 # For Front Right (FR) radar location

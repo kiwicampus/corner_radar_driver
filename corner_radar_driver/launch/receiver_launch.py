@@ -41,6 +41,13 @@ def generate_launch_description():
             'to_can_bus_topic': 'to_can_bus_fd'
         }.items()
     )
+    
+    static_transform_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0.30', '-0.30', '0.20', '0', '0', '-0.3827', '0.9239', 'inertial_link', 'fr_radar_link'], # -45 Degrees around z
+        output='screen'
+    )
 
     return LaunchDescription([
         DeclareLaunchArgument('params',
@@ -49,8 +56,9 @@ def generate_launch_description():
         
         # Launch the CAN bridge
         socketcan_launch,
-        
-        # Send initial CAN message
+        # Publish static transform for radar frame
+        static_transform_publisher, 
+        # Send initial CAN message to wake-up the sensor
         ExecuteProcess(
             cmd=['cansend', 'can0', '401##10102030405060708'],
             output='screen'
