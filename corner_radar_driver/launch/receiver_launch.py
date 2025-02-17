@@ -13,7 +13,11 @@
 # limitations under the License.
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    IncludeLaunchDescription,
+)
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch.launch_description_sources import AnyLaunchDescriptionSource
 from launch_ros.actions import Node
@@ -21,56 +25,62 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    params = PathJoinSubstitution([
-        FindPackageShare('corner_radar_driver'),
-        'config',
-        'receiver_params.yaml'
-    ])
+    params = PathJoinSubstitution(
+        [FindPackageShare("corner_radar_driver"), "config", "receiver_params.yaml"]
+    )
 
     # Include the socket_can_bridge launch file
     socketcan_launch = IncludeLaunchDescription(
-        AnyLaunchDescriptionSource([
-            FindPackageShare('ros2_socketcan'),
-            '/launch/socket_can_bridge.launch.xml'
-        ]),
+        AnyLaunchDescriptionSource(
+            [FindPackageShare("ros2_socketcan"), "/launch/socket_can_bridge.launch.xml"]
+        ),
         launch_arguments={
-            'interface': 'can0',
-            'enable_can_fd': 'true',
-            'sender_timeout_sec': '0.1',
-            'from_can_bus_topic': 'from_can_bus_fd',
-            'to_can_bus_topic': 'to_can_bus_fd'
-        }.items()
-    )
-    
-    static_transform_publisher = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0.30', '-0.30', '0.20', '0', '0', '-0.3827', '0.9239', 'inertial_link', 'fr_radar_link'], # -45 Degrees around z
-        output='screen'
+            "interface": "can0",
+            "enable_can_fd": "true",
+            "sender_timeout_sec": "0.1",
+            "from_can_bus_topic": "from_can_bus_fd",
+            "to_can_bus_topic": "to_can_bus_fd",
+        }.items(),
     )
 
-    return LaunchDescription([
-        DeclareLaunchArgument('params',
-                            default_value=params,
-                            description='Parameters for receiver'),
-        
-        # Launch the CAN bridge
-        socketcan_launch,
-        # Publish static transform for radar frame
-        static_transform_publisher, 
-        # Send initial CAN message to wake-up the sensor
-        ExecuteProcess(
-            cmd=['cansend', 'can0', '401##10102030405060708'],
-            output='screen'
-        ),
-        
-        # Launch the receiver node
-        Node(
-            package='corner_radar_driver',
-            executable='receiver',
-            name='corner_radar_driver_receiver',
-            output='screen',
-            parameters=[LaunchConfiguration('params')],
-            arguments=[]
-        )
-    ])
+    static_transform_publisher = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        arguments=[
+            "0.30",
+            "-0.30",
+            "0.20",
+            "0",
+            "0",
+            "-0.3827",
+            "0.9239",
+            "inertial_link",
+            "fr_radar_link",
+        ],  # -45 Degrees around z
+        output="screen",
+    )
+
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                "params", default_value=params, description="Parameters for receiver"
+            ),
+            # Launch the CAN bridge
+            socketcan_launch,
+            # Publish static transform for radar frame
+            static_transform_publisher,
+            # Send initial CAN message to wake-up the sensor
+            ExecuteProcess(
+                cmd=["cansend", "can0", "401##10102030405060708"], output="screen"
+            ),
+            # Launch the receiver node
+            Node(
+                package="corner_radar_driver",
+                executable="receiver",
+                name="corner_radar_driver_receiver",
+                output="screen",
+                parameters=[LaunchConfiguration("params")],
+                arguments=[],
+            ),
+        ]
+    )
